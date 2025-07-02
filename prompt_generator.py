@@ -3,7 +3,7 @@ import ast
 from google import genai
 from google.genai import types
 
-def generate(text_prompt, API_KEY=None):
+def generate_dictionary(text_prompt, API_KEY=None):
     if not API_KEY:
         raise ValueError('API_KEY must be provided.')
 
@@ -51,5 +51,5 @@ if __name__ == "__main__":
         f"Generate a valid Python dictionary (not code block) with exactly {dict_size} entries, where the keys are prompts to generate city images, "
         "and the value is the GPS location of the city. Only output the dictionary."
     )
-    city_dict = generate(prompt, API_KEY=GEMINI_API_KEY)
+    city_dict = generate_dictionary(prompt, API_KEY=GEMINI_API_KEY)
     print(len(city_dict))
