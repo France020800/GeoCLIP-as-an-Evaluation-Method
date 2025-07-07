@@ -30,5 +30,5 @@ class ImageDataset(Dataset):
         return image, torch.tensor(gps, dtype=torch.float)
 
 if __name__ == '__main__':
-    dataset = ImageDataset('images', dict)
+    dataset = ImageDataset('city', dict)
     dataloader = DataLoader(dataset, batch_size=8, shuffle=True)

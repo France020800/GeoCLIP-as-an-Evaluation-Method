@@ -25,7 +25,7 @@ def main():
     parser = argparse.ArgumentParser(description="GeoCLIP main entry point")
     parser.add_argument('--data_dir', type=str, help='Path to input file or data')
     parser.add_argument('--dataset_size', type=int, default=100, help='Size of the dataset to generate')
-    parser.add_argument('--images_class', type=str, default='city', help='Class of images to generate')
+    parser.add_argument('--images_class', type=str, default='city', help='Class of city to generate')
     args = parser.parse_args()
     logging.info(f'Configuration: {args}')
 
@@ -35,12 +35,12 @@ def main():
         data_dir = args.data_dir
         logging.info(f'Using provided data directory: {data_dir}')
 
-        image_dataset = ImageDataset('images', city_dict)
+        image_dataset = ImageDataset('datasets/city', city_dict)
         image_loader = DataLoader(image_dataset, batch_size=8, shuffle=True)
         logging.info('Image dataset created successfully!')
     else:
         prompt = (
-            f"Generate a valid Python dictionary (not code block) with exactly {args.dataset_size} entries, where the keys are prompts to generate {args.images_class} images, "
+            f"Generate a valid Python dictionary (not code block) with exactly {args.dataset_size} entries, where the keys are prompts to generate {args.images_class} city, "
             f"and the value is the tuple of floats GPS location of the {args.images_class}. Only output the dictionary."
         )
         print('Generating prompts...')
@@ -53,11 +53,11 @@ def main():
         for prompt in prompts:
             logging.info(prompt)
 
-        logging.info('Starting generating images...')
+        logging.info('Starting generating city...')
         generate_images(prompts, device=device)
         logging.info('Images generated successfully!')
 
-        image_dataset = ImageDataset('images', image_dict)
+        image_dataset = ImageDataset('datasets/city', image_dict)
         image_loader = DataLoader(image_dataset, batch_size=8, shuffle=True)
         logging.info('Image dataset created successfully!')
 
