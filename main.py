@@ -35,26 +35,33 @@ def main():
         data_dir = args.data_dir
         logging.info(f'Using provided data directory: {data_dir}')
 
-        image_dataset = ImageDataset('datasets/city', city_dict)
+        image_dataset = ImageDataset(data_dir)
         image_loader = DataLoader(image_dataset, batch_size=8, shuffle=True)
         logging.info('Image dataset created successfully!')
     else:
+        dataset_size = args.dataset_size
+        images_class = args.images_class
         prompt = (
-            f"Generate a valid Python dictionary (not code block) with exactly {args.dataset_size} entries, where the keys are prompts to generate {args.images_class} city, "
-            f"and the value is the tuple of floats GPS location of the {args.images_class}. Only output the dictionary."
+            f"Generate a valid Python dictionary (not code block) with exactly {dataset_size} entries, where the keys are prompts to generate {args.images_class} city, "
+            f"and the value is the tuple of floats GPS location of the {images_class}. Only output the dictionary."
         )
         print('Generating prompts...')
         GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
         print(GEMINI_API_KEY)
         image_dict = generate_dictionary(prompt, API_KEY=GEMINI_API_KEY)
         print('Prompts generated successfully!')
+
+        os.makedirs(f'datasets/{images_class}', exist_ok=True)
+        with open(f'datasets/{images_class}/prompts.json', 'w') as fp:
+            json.dump(image_dict, fp)
+
         prompts = list(image_dict.keys())
         logging.info('Generated prompts:')
         for prompt in prompts:
             logging.info(prompt)
 
-        logging.info('Starting generating city...')
-        generate_images(prompts, device=device)
+        logging.info(f'Starting generating {images_class}...')
+        generate_images(prompts, images_class, device=device)
         logging.info('Images generated successfully!')
 
         image_dataset = ImageDataset('datasets/city', image_dict)
