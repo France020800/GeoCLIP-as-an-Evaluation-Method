@@ -40,10 +40,10 @@ def main():
         logging.info('Image dataset created successfully!')
     else:
         dataset_size = args.dataset_size
-        images_class = args.images_class
+        images_class = args.images_class.replace(' ', '_')
         prompt = (
-            f"Generate a valid Python dictionary (not code block) with exactly {dataset_size} entries, where the keys are prompts to generate {args.images_class} city, "
-            f"and the value is the tuple of floats GPS location of the {images_class}. Only output the dictionary."
+            f"Generate a valid Python dictionary (not code block) with exactly {dataset_size} entries, where the keys are prompts to generate famous {args.images_class}, "
+            f"and the value is the tuple of floats GPS location of the {args.images_class}. Only output the dictionary."
         )
         print('Generating prompts...')
         GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
@@ -64,7 +64,7 @@ def main():
         generate_images(prompts, images_class, device=device)
         logging.info('Images generated successfully!')
 
-        image_dataset = ImageDataset('datasets/city', image_dict)
+        image_dataset = ImageDataset('datasets/city')
         image_loader = DataLoader(image_dataset, batch_size=8, shuffle=True)
         logging.info('Image dataset created successfully!')
 
@@ -74,8 +74,10 @@ def main():
     print("===========================")
     logging.info('GoeCLIP model loaded successfully!')
 
-    results = eval.eval_images(image_loader, model, device=device)
+    gps_gallery = torch.tensor([gps for _, gps in image_dataset.images], dtype=torch.float)
+    results = eval.eval_images(image_loader, model, gps_gallery=gps_gallery, device=device)
     logging.info(json.dumps(results, indent=2))
+
 
 
 if __name__ == '__main__':
