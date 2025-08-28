@@ -75,7 +75,7 @@ def main():
     logging.info('GoeCLIP model loaded successfully!')
 
     gps_gallery = torch.tensor([gps for _, gps in image_dataset.images], dtype=torch.float)
-    results = eval.eval_images(image_loader, model, gps_gallery=gps_gallery, device=device)
+    results = eval.eval_images(image_loader, model, gps_gallery=gps_gallery, device=device, image_dataset=image_dataset)
     logging.info(json.dumps(results, indent=2))
 
 
