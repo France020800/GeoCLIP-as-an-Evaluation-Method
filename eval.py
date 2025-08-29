@@ -61,57 +61,47 @@ def single_distance_accuracy(target, pred, dis=2500, gps_gallery=None):
     return correct
 
 
-def eval_images(val_dataloader, model, gps_gallery, image_dataset, device="cpu"):
+def eval_images(val_dataloader, model, image_dataset):
     import os
     model.eval()
     preds = []
     targets = []
-
-    gps_gallery = gps_gallery.to(device)
-
-    # Extract filenames from the dataset
-    filenames = [os.path.basename(img[0]) for img in image_dataset.images]
+    filenames = []
 
     with torch.no_grad():
         for imgs, labels in tqdm(val_dataloader, desc="Evaluating"):
             labels = labels.cpu().numpy()
-            imgs = imgs.to(device)
+            for img, label in zip(imgs, labels):
+                top_pred_gps, top_pred_prob = model.predict(img, top_k=10)
+                preds.append(top_pred_gps[0])
+                targets.append(label)
+                filenames.append(img)
 
-            logits_per_image = model(imgs, gps_gallery)
-            probs = logits_per_image.softmax(dim=-1)
+    # distance_thresholds = [2500, 750, 200, 25, 1]  # km
+    distance_thresholds = [2000, 1000, 500, 100, 25, 1] # km
 
-            outs = []
-            for prob_row in probs:
-                out = most_probable_frequent_location(prob_row, gps_gallery)
-                outs.append(out)
-
-            preds.append(outs)
-            targets.append(labels)
-
-    preds = np.concatenate(preds, axis=0)
-    targets = np.concatenate(targets, axis=0)
-
-    model.train()
-
-    distance_thresholds = [2500, 750, 200, 25, 1]  # km
     accuracy_results = {}
     out_of_thresholds = {str(dis): [] for dis in distance_thresholds}
 
-    for i in range(len(targets)):
-        pred_gps = gps_gallery[preds[i]].cpu().numpy()
-        target_gps = targets[i]
-        for dis in distance_thresholds:
-            gd = GD(pred_gps, target_gps).km
+    for dis in distance_thresholds:
+        correct = 0
+        for pred, target, filename in zip(preds, targets, filenames):
+            gd = GD(pred, target).km
+
+            # Out of threshold
             if gd > dis:
                 out_of_thresholds[str(dis)].append({
-                    "filename": filenames[i],
-                    "pred_gps": [float(pred_gps[0]), float(pred_gps[1])]
+                    "filename": filename,
+                    "pred_gps": [float(pred[0]), float(pred[1])]
                 })
 
-    for dis in distance_thresholds:
-        acc, avg_distance_error = distance_accuracy(targets, preds, dis, gps_gallery)
-        print(f"Accuracy at {dis} km: {acc}, Average Distance Error: {avg_distance_error}")
+            # In threshold
+            if gd <= dis:
+                correct += 1
+
+        acc = correct / len(targets)
         accuracy_results[f'acc_{dis}_km'] = acc
+        print(f"Accuracy at {dis} km: {acc}")
 
     # Save out-of-threshold filenames to a log file
     dataset_dir = getattr(image_dataset, "root", ".")
