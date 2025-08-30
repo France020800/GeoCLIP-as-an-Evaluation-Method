@@ -28,7 +28,7 @@ def main():
     args = parser.parse_args()
     logging.info(f'Configuration: {args}')
 
-    device = 'cuda:1' if torch.cuda.is_available() else 'cpu'
+    device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
     if args.data_dir is not None:
         data_dir = args.data_dir
@@ -73,7 +73,9 @@ def main():
     print("===========================")
     logging.info('GoeCLIP model loaded successfully!')
 
-    results = eval.eval_images(image_loader, model, image_dataset=image_dataset)
+    #results = eval.eval_images(image_loader, model)
+    results = eval.eval_images_detailed(image_loader, model)
+    # results = eval.eval_images_weighted(image_loader, model)
     logging.info(json.dumps(results, indent=2))
 
 
