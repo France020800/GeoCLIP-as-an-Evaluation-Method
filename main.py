@@ -36,7 +36,7 @@ def main():
     else:
         dataset_size = args.dataset_size
         images_class = args.images_class.replace(' ', '_')
-        data_dir = f'datasets/{images_class}'
+        data_dir = f'datasets/{images_class}' 
         prompt = (
             f"Generate a valid Python dictionary (not code block) with exactly {dataset_size} entries, where the keys are prompts to generate famous {args.images_class}, "
             f"and the value is the tuple of floats GPS location of the {args.images_class}. Only output the dictionary."
