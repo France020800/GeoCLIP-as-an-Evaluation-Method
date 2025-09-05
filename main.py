@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 from geoclip import GeoCLIP
 
 logging.basicConfig(
-    filename='geoclip.log',
+    filename='results.log',
     level=logging.INFO,
     format='%(asctime)s %(levelname)s: %(message)s'
 )
@@ -33,13 +33,10 @@ def main():
     if args.data_dir is not None:
         data_dir = args.data_dir
         logging.info(f'Using provided data directory: {data_dir}')
-
-        image_dataset = ImagePathDataset(data_dir)
-        image_loader = DataLoader(image_dataset, batch_size=8, shuffle=True)
-        logging.info('Image dataset created successfully!')
     else:
         dataset_size = args.dataset_size
         images_class = args.images_class.replace(' ', '_')
+        data_dir = f'datasets/{images_class}'
         prompt = (
             f"Generate a valid Python dictionary (not code block) with exactly {dataset_size} entries, where the keys are prompts to generate famous {args.images_class}, "
             f"and the value is the tuple of floats GPS location of the {args.images_class}. Only output the dictionary."
@@ -50,8 +47,8 @@ def main():
         image_dict = generate_dictionary(prompt, API_KEY=GEMINI_API_KEY)
         print('Prompts generated successfully!')
 
-        os.makedirs(f'datasets/{images_class}', exist_ok=True)
-        with open(f'datasets/{images_class}/prompts.json', 'w') as fp:
+        os.makedirs(data_dir, exist_ok=True)
+        with open(f'{data_dir}/prompts.json', 'w') as fp:
             json.dump(image_dict, fp)
 
         prompts = list(image_dict.keys())
@@ -63,9 +60,9 @@ def main():
         generate_images(prompts, images_class, device=device)
         logging.info('Images generated successfully!')
 
-        image_dataset = ImagePathDataset(f'datasets/{images_class}')
-        image_loader = DataLoader(image_dataset, batch_size=8, shuffle=True)
-        logging.info('Image dataset created successfully!')
+    image_dataset = ImagePathDataset(data_dir)
+    image_loader = DataLoader(image_dataset, batch_size=8, shuffle=True)
+    logging.info('Image dataset created successfully!')
 
     model = GeoCLIP().to(device)
     print("===========================")
@@ -73,9 +70,8 @@ def main():
     print("===========================")
     logging.info('GoeCLIP model loaded successfully!')
 
-    #results = eval.eval_images(image_loader, model)
-    results = eval.eval_images_detailed(image_loader, model)
-    # results = eval.eval_images_weighted(image_loader, model)
+    #results = eval.eval_images(image_loader, model, data_dir)
+    results = eval.eval_images_detailed(image_loader, model, data_dir)
     logging.info(json.dumps(results, indent=2))
 
 

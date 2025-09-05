@@ -23,5 +23,5 @@ def generate_images(prompts, image_class, device='cuda:1'):
 
 
 if __name__ == '__main__':
-    prompts = ['A beautiful landscape of Florence.']
-    generate_images(prompts, 'city')
+    prompts = ['A cartoon style Florence landscape.']
+    generate_images(prompts, 'test')
